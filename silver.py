@@ -122,8 +122,8 @@ class SilverTransformer:
                 col("_bronze_ingested_at") > last_processed_ts
             )
 
-        return df.filter(col("_corrupt_record").isNull()) \
-                 .drop("_corrupt_record")
+        return df.filter(col("_rescued_data").isNull()) \
+                 .drop("_rescued_data")
 
     def deduplicate(
         self, df: DataFrame, key_columns: list[str],
@@ -187,7 +187,7 @@ quality_rules = [
     QualityRule(
         name="order_id_not_null",
         check=lambda df: df.withColumn(
-            "_quality_passed", col("order_id").isNotNull()
+            "_quality_passed", col("transaction_id").isNotNull()
         ),
         threshold=1.0,
         is_critical=True,
@@ -195,7 +195,7 @@ quality_rules = [
     QualityRule(
         name="order_amount_positive",
         check=lambda df: df.withColumn(
-            "_quality_passed", col("total_amount") > 0
+            "_quality_passed", col("amount") > 0
         ),
         threshold=0.99,
     ),
@@ -203,7 +203,7 @@ quality_rules = [
         name="valid_order_date",
         check=lambda df: df.withColumn(
             "_quality_passed",
-            col("order_date").between("2020-01-01", "2027-12-31")
+            col("amount").between(0, 99999)
         ),
         threshold=0.995,
     ),
@@ -212,7 +212,7 @@ quality_rules = [
 # Run the Silver pipeline
 transformer = SilverTransformer(spark, "orders")
 bronze_df = transformer.read_bronze_incremental()
-deduped_df = transformer.deduplicate(bronze_df, ["order_id"])
+deduped_df = transformer.deduplicate(bronze_df, ["transaction_id"])
 
 # Quality gate
 gate = DataQualityGate("silver.orders", quality_rules)
@@ -221,10 +221,10 @@ gate.print_report()
 
 # Apply schema and write
 typed_df = transformer.apply_schema(deduped_df, {
-    "order_id": "long",
-    "total_amount": "decimal(18,2)",
-    "order_date": "date",
-    "customer_id": "long",
+    "transaction_id": "string",
+    "amount": "double",
+   # "order_date": "date",
+    "user_id": "long",
 })
 enriched_df = transformer.add_silver_metadata(typed_df)
-transformer.merge_into_silver(enriched_df, ["order_id"])
+transformer.merge_into_silver(enriched_df, ["transaction_id"])

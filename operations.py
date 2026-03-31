@@ -21,20 +21,10 @@
 
 # COMMAND ----------
 
-# Check if you can create schemas in demo catalog
-spark.sql("CREATE SCHEMA IF NOT EXISTS accenture.manish_bronze")
-spark.sql("CREATE SCHEMA IF NOT EXISTS accenture.manish_silver")
-spark.sql("CREATE SCHEMA IF NOT EXISTS accenture.manish_gold")
-
-# COMMAND ----------
-
-# # Step 1: Check available catalogs
 # spark.sql("SHOW CATALOGS").show()
 
-# # Step 2: Check available schemas
 # spark.sql("SHOW DATABASES").show()
 
-# Step 3: Check existing DBFS mounts
 spark.sql("SELECT current_user()").show()
 
 #spark.sql("SHOW TABLES").show()#
@@ -54,3 +44,20 @@ https://enb-accenture.cloud.databricks.com/files/ManishGautam/medallionArch/orde
 # COMMAND ----------
 
 dbutils.fs.mkdirs ('dbfs:/FileStore/ManishGautam/medallionArch/orders/2026-03-10/')
+
+# COMMAND ----------
+
+spark.sql('select count(*) from accenture.manish_bronze.orders').display()
+
+# COMMAND ----------
+
+spark.sql('truncate table accenture.manish_bronze.orders').display()
+
+# COMMAND ----------
+
+display(spark.sql('select * from accenture.manish_silver.orders'))
+
+
+# COMMAND ----------
+
+spark.sql("drop table if exists accenture.manish_gold.customer_lifetime_value").show()

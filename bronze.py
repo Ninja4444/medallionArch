@@ -32,7 +32,7 @@ class BronzeIngester:
 
         if file_format == "json":
             reader = reader.option("multiLine", "true") \
-                           .option("mode", "PERMISSIVE") \
+                           .option("mode", "PERMISSIVE") \  
                            .option("columnNameOfCorruptRecord", "_corrupt_record")
 
         raw_df = reader.load(landing_path)
@@ -108,3 +108,4 @@ print(f"Ingested {count} order records to Bronze")
 
 # Or use Auto Loader for incremental
 count = ingester.ingest_incremental("/FileStore/ManishGautam/medallionArch/orders/")
+print(f"Ingested {count} order records to Bronze")
